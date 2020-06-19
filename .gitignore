@@ -151,4 +151,7 @@ dist
 # Ignore all local history of files
 .history
 
+# Parcel
+.parcel-cache
+
 # End of https://www.toptal.com/developers/gitignore/api/node,visualstudiocode,macos

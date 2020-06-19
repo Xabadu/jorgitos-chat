@@ -1,3 +1,8 @@
 {
-  "extends": ["airbnb", "airbnb/hooks", "plugin:prettier/recommended"]
+  "extends": ["airbnb", "airbnb/hooks", "plugin:prettier/recommended"],
+  "env": {
+    "browser": true,
+    "jest": true,
+    "node": true
+  }
 }
