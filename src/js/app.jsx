@@ -17,11 +17,13 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
+const db = firebase.firestore();
+
 const App = () => (
   <Router>
     <Suspense fallback={<p>Cargando...</p>}>
       <Switch>
-        <Route exact path="/" component={Lobby} />
+        <Route exact path="/" component={() => <Lobby db={db} />} />
         <Route path="/chatroom" component={Chatroom} />
       </Switch>
     </Suspense>
