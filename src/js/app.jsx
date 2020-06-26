@@ -1,6 +1,10 @@
-import React from "react";
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
 import * as firebase from "firebase";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+
+import Chatroom from "./components/chatroom";
+import Lobby from "./components/lobby";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBF2wAkbMR5yNvD9QO-BtCiHaPMWt1oY_c",
@@ -13,6 +17,15 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-const App = () => <p>Hola!</p>;
+const App = () => (
+  <Router>
+    <Suspense fallback={<p>Cargando...</p>}>
+      <Switch>
+        <Route exact path="/" component={Lobby} />
+        <Route path="/chatroom" component={Chatroom} />
+      </Switch>
+    </Suspense>
+  </Router>
+);
 
 ReactDOM.render(<App />, document.querySelector("#container"));
