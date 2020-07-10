@@ -24,7 +24,7 @@ const App = () => (
     <Suspense fallback={<p>Cargando...</p>}>
       <Switch>
         <Route exact path="/" component={() => <Lobby db={db} />} />
-        <Route path="/chatroom" component={Chatroom} />
+        <Route path="/chatroom" component={() => <Chatroom db={db} />} />
       </Switch>
     </Suspense>
   </Router>
