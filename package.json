@@ -38,6 +38,7 @@
     "prettier": "2.0.5"
   },
   "dependencies": {
+    "date-fns": "^2.14.0",
     "firebase": "^7.15.2",
     "prop-types": "^15.7.2",
     "react": "^16.13.1",
