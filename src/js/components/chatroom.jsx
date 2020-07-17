@@ -47,8 +47,12 @@ const UserItem = styled.li`
   padding: 5px 0;
 `;
 
+const MessageText = styled.p``;
+
 const Chatroom = ({ db }) => {
   const [userList, setUserList] = useState([]);
+  const [message, setMessage] = useState("");
+  const [messagesList, setMessagesList] = useState([]);
 
   useEffect(() => {
     const usersRef = db.collection("users");
@@ -58,9 +62,39 @@ const Chatroom = ({ db }) => {
     });
   }, []);
 
+  useEffect(() => {
+    const messagesRef = db.collection("messages");
+
+    return messagesRef.orderBy("datetime").onSnapshot((data) => {
+      setMessagesList(data.docs);
+    });
+  }, []);
+
+  const handleClick = () => {
+    if (message.trim() !== "") {
+      db.collection("messages")
+        .add({
+          user: localStorage.getItem("username"),
+          message,
+          datetime: new Date(),
+        })
+        .then(() => {
+          setMessage("");
+        })
+        .catch(() => {});
+    }
+  };
+
   return (
     <MainContainer>
-      <MessagesContainer>Los mensajes</MessagesContainer>
+      <MessagesContainer>
+        {messagesList.map((message) => (
+          <MessageText>
+            {message.data().user}: {message.data().message} -{" "}
+            {message.data().datetime.toDate().toString()}
+          </MessageText>
+        ))}
+      </MessagesContainer>
       <SidebarContainer>
         <UserList>
           {userList.map((user) => (
@@ -69,8 +103,11 @@ const Chatroom = ({ db }) => {
         </UserList>
       </SidebarContainer>
       <TextAreaContainer>
-        <TextInput />
-        <Button>Enviar</Button>
+        <TextInput
+          onChange={(e) => setMessage(e.target.value)}
+          value={message}
+        />
+        <Button onClick={handleClick}>Enviar</Button>
       </TextAreaContainer>
     </MainContainer>
   );
