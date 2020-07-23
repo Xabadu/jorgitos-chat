@@ -2,7 +2,6 @@
   "name": "jorgitos-chat",
   "version": "1.0.0",
   "description": "Un chat que construimos en vivo en https://twitch.tv/xabadu 📺🍅🔥",
-  "main": "index.js",
   "scripts": {
     "build": "parcel build src/index.html",
     "start": "parcel src/index.html",

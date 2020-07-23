@@ -112,8 +112,12 @@ UserList.defaultProps = {
   },
 };
 
+const MessageText = styled.p``;
+
 const Chatroom = ({ db }) => {
   const [userList, setUserList] = useState([]);
+  const [message, setMessage] = useState("");
+  const [messagesList, setMessagesList] = useState([]);
 
   useEffect(() => {
     const usersRef = db.collection("users");
@@ -123,9 +127,39 @@ const Chatroom = ({ db }) => {
     });
   }, []);
 
+  useEffect(() => {
+    const messagesRef = db.collection("messages");
+
+    return messagesRef.orderBy("datetime").onSnapshot((data) => {
+      setMessagesList(data.docs);
+    });
+  }, []);
+
+  const handleClick = () => {
+    if (message.trim() !== "") {
+      db.collection("messages")
+        .add({
+          user: localStorage.getItem("username"),
+          message,
+          datetime: new Date(),
+        })
+        .then(() => {
+          setMessage("");
+        })
+        .catch(() => {});
+    }
+  };
+
   return (
     <MainContainer>
-      <MessagesContainer>Los mensajes</MessagesContainer>
+      <MessagesContainer>
+        {messagesList.map((message) => (
+          <MessageText>
+            {message.data().user}: {message.data().message} -{" "}
+            {message.data().datetime.toDate().toString()}
+          </MessageText>
+        ))}
+      </MessagesContainer>
       <SidebarContainer>
         <ThemeProvider theme={theme}>
           <UserList>
@@ -136,9 +170,12 @@ const Chatroom = ({ db }) => {
         </ThemeProvider>
       </SidebarContainer>
       <TextAreaContainer>
-        <TextInput />
+        <TextInput
+          onChange={(e) => setMessage(e.target.value)}
+          value={message}
+        />
         <ThemeProvider theme={theme}>
-          <Button>Enviar</Button>
+          <Button onClick={handleClick}>Enviar</Button>
         </ThemeProvider>
       </TextAreaContainer>
     </MainContainer>
