@@ -53,7 +53,7 @@ const Button = styled.button`
   font-size: 16px;
   &:hover {
     background-color: ${(props) => props.theme.highlight};
-    background-position-x: 70px;
+    background-position-x: 120px;
   }
   ,
   &:focus {
