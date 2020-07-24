@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from "react";
-import styled, { ThemeProvider } from "styled-components";
+import React, {useEffect, useState} from "react";
+import styled, {ThemeProvider} from "styled-components";
 
 const appBackground = styled.div`
   background: rgba(250, 250, 250, 0.9);
 `;
 
 const MainContainer = styled.div`
+  max-height: 80%;
+  height: 800px;
+  max-width: 900px;
   border: 1px solid tomato;
   display: grid;
   grid-template-columns: minmax(600px, auto) 200px;
@@ -18,6 +21,8 @@ const MainContainer = styled.div`
 `;
 
 const MessagesContainer = styled(appBackground)`
+  word-break: break-word;
+  overflow-y: scroll;
   border-bottom: 1px solid hotpink;
   grid-area: messages;
   padding: 0 0.5em;
@@ -26,6 +31,8 @@ const MessagesContainer = styled(appBackground)`
 const SidebarContainer = styled(appBackground)`
   border-left: 1px solid hotpink;
   grid-area: sidebar;
+  height: 100%;
+  overflow-y: scroll;
 `;
 
 const TextAreaContainer = styled.div`
@@ -39,7 +46,7 @@ const TextInput = styled.input`
   font-size: 16px;
   border: none;
   outline: none;
-  margin-bottom: 1px;
+  margin-bottom: 0;
 `;
 
 const Button = styled.button`
@@ -51,14 +58,18 @@ const Button = styled.button`
   background-color: ${(props) => props.theme.backgroundColor};
   border-radius: 0;
   font-size: 16px;
+  width: 140px;
+  z-index: 10px;
+  outline: none;
   &:hover {
     background-color: ${(props) => props.theme.highlight};
-    background-position-x: 120px;
+    background-position-x: calc(140px - 50px);
   }
   ,
   &:focus {
     background-color: ${(props) => props.theme.highlight};
     background-position-x: -70px;
+    box-shadow: 0 0 5px #ff69f488;
   }
 `;
 
@@ -89,97 +100,114 @@ const UserItem = styled.li`
 `;
 
 const theme = {
-  backgroundColor: "hotpink",
-  highlight: "deeppink",
-  secondary: "hotpink",
-  secondaryHighlight: "deeppink",
+    backgroundColor: "hotpink",
+    highlight: "deeppink",
+    secondary: "hotpink",
+    secondaryHighlight: "deeppink",
 };
 
 Button.defaultProps = {
-  theme: {
-    backgroundColor: "tomato",
-    highlight: "coral",
-    secondary: "lime",
-    secondaryHighlight: "lawngreen",
-  },
+    theme: {
+        backgroundColor: "tomato",
+        highlight: "coral",
+        secondary: "lime",
+        secondaryHighlight: "lawngreen",
+    },
 };
 UserList.defaultProps = {
-  theme: {
-    backgroundColor: "tomato",
-    highlight: "coral",
-    secondary: "lime",
-    secondaryHighlight: "lawngreen",
-  },
+    theme: {
+        backgroundColor: "tomato",
+        highlight: "coral",
+        secondary: "lime",
+        secondaryHighlight: "lawngreen",
+    },
 };
 
 const MessageText = styled.p``;
 
-const Chatroom = ({ db }) => {
-  const [userList, setUserList] = useState([]);
-  const [message, setMessage] = useState("");
-  const [messagesList, setMessagesList] = useState([]);
+const Chatroom = ({db}) => {
+    const [userList, setUserList] = useState([]);
+    const [message, setMessage] = useState("");
+    const [messagesList, setMessagesList] = useState([]);
 
-  useEffect(() => {
-    const usersRef = db.collection("users");
+    useEffect(() => {
+        const usersRef = db.collection("users");
 
-    return usersRef.onSnapshot((data) => {
-      setUserList(data.docs);
-    });
-  }, []);
+        return usersRef.onSnapshot((data) => {
+            setUserList(data.docs);
+        });
+    }, []);
 
-  useEffect(() => {
-    const messagesRef = db.collection("messages");
+    useEffect(() => {
+        const messagesRef = db.collection("messages");
 
-    return messagesRef.orderBy("datetime").onSnapshot((data) => {
-      setMessagesList(data.docs);
-    });
-  }, []);
+        return messagesRef.orderBy("datetime").onSnapshot((data) => {
+            setMessagesList(data.docs);
+        });
+    }, []);
 
-  const handleClick = () => {
-    if (message.trim() !== "") {
-      db.collection("messages")
-        .add({
-          user: localStorage.getItem("username"),
-          message,
-          datetime: new Date(),
-        })
-        .then(() => {
-          setMessage("");
-        })
-        .catch(() => {});
-    }
-  };
+    const handleClick = () => {
+        if (message.trim() !== "") {
+            db.collection("messages")
+                .add({
+                    user: localStorage.getItem("username"),
+                    message,
+                    datetime: new Date(),
+                })
+                .then(() => {
+                    setMessage("");
+                    const audioCtx = new window.AudioContext();
+                    const audioElement = document.querySelector("audio");
 
-  return (
-    <MainContainer>
-      <MessagesContainer>
-        {messagesList.map((message) => (
-          <MessageText>
-            {message.data().user}: {message.data().message} -{" "}
-            {message.data().datetime.toDate().toString()}
-          </MessageText>
-        ))}
-      </MessagesContainer>
-      <SidebarContainer>
-        <ThemeProvider theme={theme}>
-          <UserList>
-            {userList.map((user) => (
-              <UserItem>{user.id}</UserItem>
-            ))}
-          </UserList>
-        </ThemeProvider>
-      </SidebarContainer>
-      <TextAreaContainer>
-        <TextInput
-          onChange={(e) => setMessage(e.target.value)}
-          value={message}
-        />
-        <ThemeProvider theme={theme}>
-          <Button onClick={handleClick}>Enviar</Button>
-        </ThemeProvider>
-      </TextAreaContainer>
-    </MainContainer>
-  );
+                    if (audioCtx.state === "suspended") {
+                        audioCtx.resume();
+                    }
+
+                    audioElement.play();
+                    const mainContainer = document.querySelector(
+                        ".chatroom-main-container"
+                    );
+                    mainContainer.classList.add("shake");
+                    setTimeout(() => {
+                        mainContainer.classList.remove("shake");
+                    }, 1000);
+                })
+                .catch((err) => {
+                    console.log("err", err);
+                });
+        }
+    };
+
+    return (
+        <MainContainer className="chatroom-main-container">
+            <MessagesContainer>
+                {messagesList.map((message) => (
+                    <MessageText>
+                        {message.data().user}: {message.data().message} -{" "}
+                        {message.data().datetime.toDate().toString()}
+                    </MessageText>
+                ))}
+            </MessagesContainer>
+            <SidebarContainer>
+                <ThemeProvider theme={theme}>
+                    <UserList>
+                        {userList.map((user) => (
+                            <UserItem>{user.id}</UserItem>
+                        ))}
+                    </UserList>
+                </ThemeProvider>
+            </SidebarContainer>
+            <TextAreaContainer>
+                <TextInput
+                    onChange={(e) => setMessage(e.target.value)}
+                    value={message}
+                />
+                <ThemeProvider theme={theme}>
+                    <Button onClick={handleClick}>Enviar</Button>
+                </ThemeProvider>
+            </TextAreaContainer>
+        </MainContainer>
+    );
 };
 
 export default Chatroom;
