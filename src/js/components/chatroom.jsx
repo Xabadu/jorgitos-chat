@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
 const MainContainer = styled.div`
+  max-height: 80%;
+  max-width: 900px;
   border: 1px solid tomato;
   display: grid;
   grid-template-columns: minmax(600px, auto) 200px;
@@ -12,6 +14,9 @@ const MainContainer = styled.div`
 `;
 
 const MessagesContainer = styled.div`
+  word-break: break-word;
+  overflow-y: scroll;
+  max-height: 600px;
   border: 1px solid peru;
   grid-area: messages;
 `;
