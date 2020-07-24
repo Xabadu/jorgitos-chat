@@ -85,13 +85,30 @@ const Chatroom = ({ db }) => {
         })
         .then(() => {
           setMessage("");
+          const audioCtx = new window.AudioContext();
+          const audioElement = document.querySelector("audio");
+
+          if (audioCtx.state === "suspended") {
+            audioCtx.resume();
+          }
+
+          audioElement.play();
+          const mainContainer = document.querySelector(
+            ".chatroom-main-container"
+          );
+          mainContainer.classList.add("shake");
+          setTimeout(() => {
+            mainContainer.classList.remove("shake");
+          }, 1000);
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.log("err", err);
+        });
     }
   };
 
   return (
-    <MainContainer>
+    <MainContainer className="chatroom-main-container">
       <MessagesContainer>
         {messagesList.map((message) => (
           <MessageText>
