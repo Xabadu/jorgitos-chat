@@ -4,5 +4,9 @@
     "browser": true,
     "jest": true,
     "node": true
+  },
+  "rules": {
+    "consistent-return": "off",
+    "react-hooks/exhaustive-deps": "off"
   }
 }
