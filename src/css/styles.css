@@ -3,6 +3,7 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
+  background-color: lightpink;
 }
 
 #container {
@@ -10,6 +11,17 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+
+  background: url("/img/jorgito.png") no-repeat 2vh 5vh;
+  background-size: 90vh;
+  background-clip: content-box;
+  background-origin: padding-box;
+}
+
+button {
+  background: no-repeat url("/img/jorgito.png") 70px top ;
+  background-position-x: 120px;
+  background-size: 70px 70px;
 }
 
 #container,
