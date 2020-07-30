@@ -1,5 +1,7 @@
-import React, {useEffect, useState} from "react";
-import styled, {ThemeProvider} from "styled-components";
+import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import styled, { ThemeProvider } from "styled-components";
+import { format } from "date-fns";
 
 const appBackground = styled.div`
   background: rgba(250, 250, 250, 0.9);
@@ -61,11 +63,12 @@ const Button = styled.button`
   width: 140px;
   z-index: 10px;
   outline: none;
+  cursor: pointer;
   &:hover {
     background-color: ${(props) => props.theme.highlight};
     background-position-x: calc(140px - 50px);
   }
-  ,
+
   &:focus {
     background-color: ${(props) => props.theme.highlight};
     background-position-x: -70px;
@@ -74,7 +77,6 @@ const Button = styled.button`
 `;
 
 const UserList = styled.ul`
-  border-bottom: 1px solid ${(props) => props.theme.secondary};
   list-style-type: none;
   padding-inline-start: 0;
 `;
@@ -100,114 +102,156 @@ const UserItem = styled.li`
 `;
 
 const theme = {
-    backgroundColor: "hotpink",
-    highlight: "deeppink",
-    secondary: "hotpink",
-    secondaryHighlight: "deeppink",
+  backgroundColor: "hotpink",
+  highlight: "deeppink",
+  secondary: "hotpink",
+  secondaryHighlight: "deeppink",
 };
 
 Button.defaultProps = {
-    theme: {
-        backgroundColor: "tomato",
-        highlight: "coral",
-        secondary: "lime",
-        secondaryHighlight: "lawngreen",
-    },
+  theme: {
+    backgroundColor: "tomato",
+    highlight: "coral",
+    secondary: "lime",
+    secondaryHighlight: "lawngreen",
+  },
 };
 UserList.defaultProps = {
-    theme: {
-        backgroundColor: "tomato",
-        highlight: "coral",
-        secondary: "lime",
-        secondaryHighlight: "lawngreen",
-    },
+  theme: {
+    backgroundColor: "tomato",
+    highlight: "coral",
+    secondary: "lime",
+    secondaryHighlight: "lawngreen",
+  },
 };
 
-const MessageText = styled.p``;
+const MessageText = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin: 15px 0;
+  padding: 10px 5px;
+  border: 1px solid hotpink;
+  border-radius: 4px;
+`;
 
-const Chatroom = ({db}) => {
-    const [userList, setUserList] = useState([]);
-    const [message, setMessage] = useState("");
-    const [messagesList, setMessagesList] = useState([]);
+const MessageUser = styled.div`
+  font-weight: bold;
+  margin-bottom: 5px;
+  span {
+    font-weight: normal;
+    font-size: 12px;
+  }
+`;
 
-    useEffect(() => {
-        const usersRef = db.collection("users");
+const MessageContent = styled.div``;
 
-        return usersRef.onSnapshot((data) => {
-            setUserList(data.docs);
+const Chatroom = ({ db }) => {
+  const [userList, setUserList] = useState([]);
+  const [message, setMessage] = useState("");
+  const [messagesList, setMessagesList] = useState([]);
+  const messageContainer = document.querySelector(
+    ".chatroom-message-container"
+  );
+
+  useEffect(() => {
+    const usersRef = db.collection("users");
+
+    return usersRef.onSnapshot((data) => {
+      setUserList(data.docs);
+    });
+  }, []);
+
+  useEffect(() => {
+    const messagesRef = db.collection("messages");
+
+    return messagesRef.orderBy("datetime").onSnapshot((data) => {
+      setMessagesList(data.docs);
+      if (messageContainer && messageContainer.scrollHeight) {
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+      }
+    });
+  }, [messageContainer]);
+
+  const handleClick = () => {
+    if (message.trim() !== "") {
+      db.collection("messages")
+        .add({
+          user: localStorage.getItem("username"),
+          message,
+          datetime: new Date(),
+        })
+        .then(() => {
+          setMessage("");
+          const audioCtx = new window.AudioContext();
+          const audioElement = document.querySelector("audio");
+
+          if (audioCtx.state === "suspended") {
+            audioCtx.resume();
+          }
+
+          audioElement.play();
+          const mainContainer = document.querySelector(
+            ".chatroom-main-container"
+          );
+          mainContainer.classList.add("shake");
+          setTimeout(() => {
+            mainContainer.classList.remove("shake");
+          }, 1000);
+        })
+        .catch((err) => {
+          console.log("err", err);
         });
-    }, []);
+    }
+  };
 
-    useEffect(() => {
-        const messagesRef = db.collection("messages");
+  return (
+    <MainContainer className="chatroom-main-container">
+      <MessagesContainer className="chatroom-message-container">
+        {messagesList
+          .filter((msg) => msg.data().user !== null)
+          .map((msg) => (
+            <MessageText
+              key={`${msg.data().user}-${msg.data().datetime.nanoseconds}`}
+            >
+              <MessageUser>
+                {msg.data().user}{" "}
+                <span>
+                  {format(
+                    msg.data().datetime.toDate(),
+                    "d MMM yyyy hh:mm aaaa"
+                  )}
+                </span>
+              </MessageUser>
+              <MessageContent>{msg.data().message}</MessageContent>
+            </MessageText>
+          ))}
+      </MessagesContainer>
+      <SidebarContainer>
+        <ThemeProvider theme={theme}>
+          <UserList>
+            {userList.map((user) => (
+              <UserItem key={user.id}>{user.id}</UserItem>
+            ))}
+          </UserList>
+        </ThemeProvider>
+      </SidebarContainer>
+      <TextAreaContainer>
+        <TextInput
+          onChange={(e) => setMessage(e.target.value)}
+          value={message}
+        />
+        <ThemeProvider theme={theme}>
+          <Button onClick={handleClick}>Enviar</Button>
+        </ThemeProvider>
+      </TextAreaContainer>
+    </MainContainer>
+  );
+};
 
-        return messagesRef.orderBy("datetime").onSnapshot((data) => {
-            setMessagesList(data.docs);
-        });
-    }, []);
-
-    const handleClick = () => {
-        if (message.trim() !== "") {
-            db.collection("messages")
-                .add({
-                    user: localStorage.getItem("username"),
-                    message,
-                    datetime: new Date(),
-                })
-                .then(() => {
-                    setMessage("");
-                    const audioCtx = new window.AudioContext();
-                    const audioElement = document.querySelector("audio");
-
-                    if (audioCtx.state === "suspended") {
-                        audioCtx.resume();
-                    }
-
-                    audioElement.play();
-                    const mainContainer = document.querySelector(
-                        ".chatroom-main-container"
-                    );
-                    mainContainer.classList.add("shake");
-                    setTimeout(() => {
-                        mainContainer.classList.remove("shake");
-                    }, 1000);
-                })
-                .catch((err) => {
-                    console.log("err", err);
-                });
-        }
-    };
-
-    return (
-        <MainContainer className="chatroom-main-container">
-            <MessagesContainer>
-                {messagesList.map((message) => (
-                    <MessageText>
-                        {message.data().user}: {message.data().message} -{" "}
-                        {message.data().datetime.toDate().toString()}
-                    </MessageText>
-                ))}
-            </MessagesContainer>
-            <SidebarContainer>
-                <ThemeProvider theme={theme}>
-                    <UserList>
-                        {userList.map((user) => (
-                            <UserItem>{user.id}</UserItem>
-                        ))}
-                    </UserList>
-                </ThemeProvider>
-            </SidebarContainer>
-            <TextAreaContainer>
-                <TextInput
-                    onChange={(e) => setMessage(e.target.value)}
-                    value={message}
-                />
-                <ThemeProvider theme={theme}>
-                    <Button onClick={handleClick}>Enviar</Button>
-                </ThemeProvider>
-            </TextAreaContainer>
-        </MainContainer>
-    );
+Chatroom.propTypes = {
+  db: PropTypes.shape({
+    collection: PropTypes.func.isRequired,
+  }).isRequired,
 };
 
 export default Chatroom;
