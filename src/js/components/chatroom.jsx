@@ -238,6 +238,11 @@ const Chatroom = ({ db }) => {
       <TextAreaContainer>
         <TextInput
           onChange={(e) => setMessage(e.target.value)}
+          onKeyUp={(e) => {
+            if (e.key === "Enter") {
+              handleClick();
+            }
+          }}
           value={message}
         />
         <ThemeProvider theme={theme}>
