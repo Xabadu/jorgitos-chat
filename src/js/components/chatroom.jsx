@@ -101,6 +101,13 @@ const UserItem = styled.li`
   }
 `;
 
+const UserButton = styled.button`
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+`;
+
 const theme = {
   backgroundColor: "hotpink",
   highlight: "deeppink",
@@ -153,6 +160,22 @@ const Chatroom = ({ db }) => {
     ".chatroom-message-container"
   );
 
+  const playZumbido = () => {
+    const audioCtx = new window.AudioContext();
+    const audioElement = document.querySelector("audio");
+
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+
+    audioElement.play();
+    const mainContainer = document.querySelector(".chatroom-main-container");
+    mainContainer.classList.add("shake");
+    setTimeout(() => {
+      mainContainer.classList.remove("shake");
+    }, 1000);
+  };
+
   useEffect(() => {
     const usersRef = db.collection("users");
 
@@ -172,6 +195,26 @@ const Chatroom = ({ db }) => {
     });
   }, [messageContainer]);
 
+  useEffect(() => {
+    const zumbidosRef = db.collection("zumbidos");
+
+    return zumbidosRef.where("played", "<", 1).onSnapshot((data) => {
+      if (data.docs) {
+        data.docs.forEach((doc) => {
+          if (doc.data().to === localStorage.getItem("username")) {
+            playZumbido();
+            db.collection("zumbidos").doc(doc.id).set(
+              {
+                played: 1,
+              },
+              { merge: true }
+            );
+          }
+        });
+      }
+    });
+  });
+
   const handleClick = () => {
     if (message.trim() !== "") {
       db.collection("messages")
@@ -182,26 +225,18 @@ const Chatroom = ({ db }) => {
         })
         .then(() => {
           setMessage("");
-          const audioCtx = new window.AudioContext();
-          const audioElement = document.querySelector("audio");
-
-          if (audioCtx.state === "suspended") {
-            audioCtx.resume();
-          }
-
-          audioElement.play();
-          const mainContainer = document.querySelector(
-            ".chatroom-main-container"
-          );
-          mainContainer.classList.add("shake");
-          setTimeout(() => {
-            mainContainer.classList.remove("shake");
-          }, 1000);
         })
         .catch((err) => {
           console.log("err", err);
         });
     }
+  };
+
+  const sendZumbido = (user) => {
+    db.collection("zumbidos").add({
+      to: user,
+      played: 0,
+    });
   };
 
   return (
@@ -230,7 +265,11 @@ const Chatroom = ({ db }) => {
         <ThemeProvider theme={theme}>
           <UserList>
             {userList.map((user) => (
-              <UserItem key={user.id}>{user.id}</UserItem>
+              <UserItem key={user.id}>
+                <UserButton onClick={() => sendZumbido(user.id)}>
+                  {user.id}
+                </UserButton>
+              </UserItem>
             ))}
           </UserList>
         </ThemeProvider>
