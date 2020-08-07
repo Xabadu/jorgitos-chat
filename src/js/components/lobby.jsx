@@ -116,6 +116,11 @@ const Lobby = ({ db }) => {
           type="text"
           placeholder="Username"
           onChange={onChange}
+          onKeyUp={(e) => {
+            if (e.key === "Enter") {
+              handleClick();
+            }
+          }}
           value={username}
         />
         <StyledButton onClick={handleClick}>Ingresar</StyledButton>
