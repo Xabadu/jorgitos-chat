@@ -68,7 +68,7 @@ const Lobby = ({ db }) => {
           // si el usuario existe, verificar si existe la key en localStorage
           // si la key existe -> pasar al chatroom
           if (localStorage.getItem("username") === userLowerCase) {
-            history.push("/chatroom");
+            history.push("/chatroom", { username });
           } else if (
             differenceInHours(new Date(), doc.data().lastLogin.toDate()) > 24
           ) {
@@ -78,7 +78,7 @@ const Lobby = ({ db }) => {
               })
               .then(() => {
                 localStorage.setItem("username", userLowerCase);
-                history.push("/chatroom");
+                history.push("/chatroom", { username });
               });
           } else {
             setError("El usuario ya existe, por favor ingresa otro");
@@ -91,8 +91,7 @@ const Lobby = ({ db }) => {
             })
             .then(() => {
               localStorage.setItem("username", userLowerCase);
-              localStorage.setItem("displayName", username);
-              history.push("/chatroom");
+              history.push("/chatroom", { username });
             });
         }
       });
