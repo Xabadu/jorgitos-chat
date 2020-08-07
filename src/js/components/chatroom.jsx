@@ -219,7 +219,7 @@ const Chatroom = ({ db }) => {
     if (message.trim() !== "") {
       db.collection("messages")
         .add({
-          user: localStorage.getItem("username"),
+          user: localStorage.getItem("displayName"),
           message,
           datetime: new Date(),
         })
@@ -267,7 +267,7 @@ const Chatroom = ({ db }) => {
             {userList.map((user) => (
               <UserItem key={user.id}>
                 <UserButton onClick={() => sendZumbido(user.id)}>
-                  {user.id}
+                  {user.data().displayName}
                 </UserButton>
               </UserItem>
             ))}

@@ -57,17 +57,17 @@ const Lobby = ({ db }) => {
   const history = useHistory();
 
   const handleClick = () => {
-    const user = username.trim();
-    if (user !== "") {
+    const userLowerCase = username.trim().toLowerCase();
+    if (userLowerCase !== "") {
       setError("");
-      const docRef = db.collection("users").doc(user);
+      const docRef = db.collection("users").doc(userLowerCase);
 
       docRef.get().then((doc) => {
         // TODO: Validacion del ultimo "login" del usuario.
         if (doc.exists) {
           // si el usuario existe, verificar si existe la key en localStorage
           // si la key existe -> pasar al chatroom
-          if (localStorage.getItem("username") === user) {
+          if (localStorage.getItem("username") === userLowerCase) {
             history.push("/chatroom");
           } else if (
             differenceInHours(new Date(), doc.data().lastLogin.toDate()) > 24
@@ -77,7 +77,7 @@ const Lobby = ({ db }) => {
                 lastLogin: new Date(),
               })
               .then(() => {
-                localStorage.setItem("username", user);
+                localStorage.setItem("username", userLowerCase);
                 history.push("/chatroom");
               });
           } else {
@@ -86,10 +86,12 @@ const Lobby = ({ db }) => {
         } else {
           docRef
             .set({
+              displayName: username.trim(),
               lastLogin: new Date(),
             })
             .then(() => {
-              localStorage.setItem("username", user);
+              localStorage.setItem("username", userLowerCase);
+              localStorage.setItem("displayName", username);
               history.push("/chatroom");
             });
         }
