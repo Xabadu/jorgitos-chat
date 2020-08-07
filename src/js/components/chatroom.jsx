@@ -205,12 +205,11 @@ const Chatroom = ({ db }) => {
         data.docs.forEach((doc) => {
           if (doc.data().to === localStorage.getItem("username")) {
             playZumbido();
-            db.collection("zumbidos").doc(doc.id).set(
-              {
-                played: 1,
-              },
-              { merge: true }
-            );
+            db.collection("zumbidos")
+              .doc(doc.id)
+              .delete()
+              .then(() => console.log("Deleted!"))
+              .catch((e) => console.log("Error: ", e));
           }
         });
       }
