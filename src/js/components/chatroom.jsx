@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import styled, { ThemeProvider } from "styled-components";
 import { format } from "date-fns";
+import { useLocation } from "react-router-dom";
 
 const appBackground = styled.div`
   background: rgba(250, 250, 250, 0.9);
@@ -159,6 +160,7 @@ const Chatroom = ({ db }) => {
   const messageContainer = document.querySelector(
     ".chatroom-message-container"
   );
+  const { state } = useLocation();
 
   const playZumbido = () => {
     const audioCtx = new window.AudioContext();
@@ -219,7 +221,7 @@ const Chatroom = ({ db }) => {
     if (message.trim() !== "") {
       db.collection("messages")
         .add({
-          user: localStorage.getItem("displayName"),
+          user: state.username,
           message,
           datetime: new Date(),
         })
