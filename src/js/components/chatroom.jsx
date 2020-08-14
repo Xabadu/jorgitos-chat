@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import styled, { ThemeProvider } from "styled-components";
 import { format } from "date-fns";
 import { useLocation } from "react-router-dom";
+import Preview from "./preview";
 
 const appBackground = styled.div`
   background: rgba(250, 250, 250, 0.9);
@@ -157,6 +158,9 @@ const Chatroom = ({ db }) => {
   const [userList, setUserList] = useState([]);
   const [message, setMessage] = useState("");
   const [messagesList, setMessagesList] = useState([]);
+  const [gifList, setGifList] = useState([]);
+  const [currentGifIndex, setCurrentGifIndex] = useState(0);
+  const [previewURL, setPreviewURL] = useState("");
   const messageContainer = document.querySelector(
     ".chatroom-message-container"
   );
@@ -217,19 +221,42 @@ const Chatroom = ({ db }) => {
   });
 
   const handleClick = () => {
-    if (message.trim() !== "") {
-      db.collection("messages")
-        .add({
-          user: state.username,
-          message,
-          datetime: new Date(),
-        })
-        .then(() => {
-          setMessage("");
-        })
-        .catch((err) => {
-          console.log("err", err);
-        });
+    const trimmedMessage = message.trim();
+    if (trimmedMessage !== "") {
+      // detectar si el mensaje contiene un comando
+      // verificar si el mensaje contiene este string "/giphy"
+
+      if (trimmedMessage.startsWith("/giphy ")) {
+        // /giphyungif -> false  - /giphy john cena
+        // approach 1: subtr(6)
+        // approach 2: trimmedMessage.split("/giphy ") -> ["/giphy ", "resto del string"]
+        const query = trimmedMessage.substring(6);
+
+        fetch(
+          `https://api.giphy.com/v1/gifs/search?api_key=Rrw58JdkGquU9EvMhhfO10KNdhJVxZHV&rating=g&q=${query}`
+        )
+          .then((resp) => resp.json())
+          .then((resp) => {
+            console.log("resp", resp);
+            setGifList(resp.data);
+            setPreviewURL(resp.data[currentGifIndex].images.downsized.url);
+          })
+          .catch((err) => console.error(err));
+        setMessage("");
+      } else {
+        db.collection("messages")
+          .add({
+            user: state.username,
+            message: trimmedMessage,
+            datetime: new Date(),
+          })
+          .then(() => {
+            setMessage("");
+          })
+          .catch((err) => {
+            console.log("err", err);
+          });
+      }
     }
   };
 
@@ -239,6 +266,56 @@ const Chatroom = ({ db }) => {
       played: 0,
     });
   };
+
+  const cancelGIF = () => {
+    setCurrentGifIndex(0);
+    setGifList([]);
+    setPreviewURL("");
+  };
+
+  const shuffleGIF = () => {
+    // chequear el currentIndex
+    if (currentGifIndex === 5) {
+      setPreviewURL(gifList[0].images.downsized.url);
+      setCurrentGifIndex(0);
+    } else {
+      setPreviewURL(gifList[currentGifIndex + 1].images.downsized.url);
+      setCurrentGifIndex(currentGifIndex + 1);
+    }
+  };
+
+  const sendGIF = () => {
+    db.collection("messages")
+      .add({
+        user: state.username,
+        type: "GIF",
+        message: previewURL,
+        datetime: new Date(),
+      })
+      .then(() => {
+        cancelGIF();
+      })
+      .catch((err) => {
+        console.log("err", err);
+      });
+  };
+
+  const renderMessage = (msg) => {
+    // si el mensaje es de tipo gif -> retornar una img
+    // si no, retornar el mensaje
+    if (msg.data().type && msg.data().type === "GIF") {
+      return <img src={msg.data().message} />;
+    }
+    return msg.data().message;
+  };
+
+  // Paso 1: Reconocer comandos
+  // Paso 2: Request a la api de giphy
+  // Paso 3: Construir el componente de preview
+  // Paso 4: Poblar el componente de preview con el resultado de GIPHY
+  // 4.1: Boton de shuffle
+  // 4.2: Boton de cancel
+  // 4.3: Boton de enviar mensaje
 
   return (
     <MainContainer className="chatroom-main-container">
@@ -258,9 +335,22 @@ const Chatroom = ({ db }) => {
                   )}
                 </span>
               </MessageUser>
-              <MessageContent>{msg.data().message}</MessageContent>
+              <MessageContent>{renderMessage(msg)}</MessageContent>
             </MessageText>
           ))}
+        {/* 
+          onPressShuffle: Avanza a la siguiente posicion del array de GIFs
+          onPressCancel: Limpiar: array de GIFs, previewURL, currentIndex
+          onPressSend: Manda el mensaje a Firebase
+        */}
+        {previewURL && (
+          <Preview
+            onPressShuffle={shuffleGIF}
+            onPressCancel={cancelGIF}
+            onPressSend={sendGIF}
+            src={previewURL}
+          />
+        )}
       </MessagesContainer>
       <SidebarContainer>
         <ThemeProvider theme={theme}>
