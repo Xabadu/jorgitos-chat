@@ -238,8 +238,13 @@ const Chatroom = ({ db }) => {
           .then((resp) => resp.json())
           .then((resp) => {
             console.log("resp", resp);
-            setGifList(resp.data);
-            setPreviewURL(resp.data[currentGifIndex].images.downsized.url);
+            if (resp.data && resp.data.length > 0) {
+              setGifList(resp.data);
+              setPreviewURL(resp.data[currentGifIndex].images.downsized.url);
+            } else {
+              // TODO: Hacer algo mas amigable
+              console.log("No hay resultados");
+            }
           })
           .catch((err) => console.error(err));
         setMessage("");
