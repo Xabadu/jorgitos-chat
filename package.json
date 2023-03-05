@@ -21,7 +21,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^5.10.1",
     "@testing-library/react": "^10.3.0",
-    "cypress": "^4.8.0",
+    "cypress": "^4.12.1",
     "eslint": "^7.2.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "^6.11.0",
